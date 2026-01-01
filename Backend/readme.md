@@ -147,7 +147,97 @@
     { "error": "Internal Server Error" }
     ```
 
-## Notes
+## User Profile API — `/api/users/profile`
 
+- Method and Path: `GET /api/users/profile` (mounted under `/api/users`, full path: `/api/users/profile`)
+- Purpose: Retrieve the authenticated user's profile.
+- Authentication: Required. Provide JWT via `Cookie: token=...` or `Authorization: Bearer <token>`.
+
+### Request Format
+
+- Headers:
+  - `Authorization: Bearer <JWT>` or `Cookie: token=<JWT>`
+- Body: None
+- Example request (Bearer):
+```http
+GET /api/users/profile HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer JWT_TOKEN_STRING
+```
+- Example request (Cookie):
+```http
+GET /api/users/profile HTTP/1.1
+Host: localhost:3000
+Cookie: token=JWT_TOKEN_STRING
+```
+
+### Response Format
+
+- `200 OK` — Successful retrieval
+  - Body:
+    ```json
+    {
+      "user": {
+        "_id": "665f0b1c2a3c4d5e6f7a8b9c",
+        "fullname": {
+          "firstName": "Alice",
+          "lastName": "Smith"
+        },
+        "email": "alice@example.com"
+      }
+    }
+    ```
+- `401 Unauthorized` — Missing/invalid/blacklisted token or user not found
+  - Body:
+    ```json
+    { "message": "Unauthorized." }
+    ```
+- `500 Internal Server Error` — Unexpected server error
+  - Body (shape depends on global error handler):
+    ```json
+    { "error": "Internal Server Error" }
+    ```
+
+## User Logout API — `/api/users/logout`
+
+- Method and Path: `POST /api/users/logout` (mounted under `/api/users`, full path: `/api/users/logout`)
+- Purpose: Invalidate the current session token by blacklisting it and clear the cookie.
+- Authentication: Required. Provide JWT via `Cookie: token=...` or `Authorization: Bearer <token>`.
+- Security considerations:
+  - Login sets an HTTP-only cookie (`token`) with `secure` in production and `maxAge` 3600000 (1 hour).
+  - JWTs are signed with `process.env.JWT_SECRET` and have `expiresIn: '24h'`.
+  - Blacklisted tokens are stored with a TTL of 24 hours to prevent reuse.
+
+### Request Format
+
+- Headers:
+  - `Authorization: Bearer <JWT>` or `Cookie: token=<JWT>`
+- Body: None
+- Example request:
+```http
+POST /api/users/logout HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer JWT_TOKEN_STRING
+```
+
+### Response Format
+
+- `200 OK` — Successful logout
+  - Body:
+    ```json
+    { "message": "Logged out successfully." }
+    ```
+- `401 Unauthorized` — Missing token
+  - Body:
+    ```json
+    { "message": "Unauthorized." }
+    ```
+- `500 Internal Server Error` — Unexpected server error
+  - Body (shape depends on global error handler):
+    ```json
+    { "error": "Internal Server Error" }
+    ```
+
+## Notes
 - Ensure `JWT_SECRET` is set before testing; otherwise token generation will fail.
 - To return `409 Conflict` on duplicate emails, add an error handler that maps MongoDB duplicate key errors (E11000) to `409`.
