@@ -159,12 +159,15 @@
   - `Authorization: Bearer <JWT>` or `Cookie: token=<JWT>`
 - Body: None
 - Example request (Bearer):
+
 ```http
 GET /api/users/profile HTTP/1.1
 Host: localhost:3000
 Authorization: Bearer JWT_TOKEN_STRING
 ```
+
 - Example request (Cookie):
+
 ```http
 GET /api/users/profile HTTP/1.1
 Host: localhost:3000
@@ -214,6 +217,7 @@ Cookie: token=JWT_TOKEN_STRING
   - `Authorization: Bearer <JWT>` or `Cookie: token=<JWT>`
 - Body: None
 - Example request:
+
 ```http
 POST /api/users/logout HTTP/1.1
 Host: localhost:3000
@@ -238,6 +242,90 @@ Authorization: Bearer JWT_TOKEN_STRING
     { "error": "Internal Server Error" }
     ```
 
+## Captain Registration API — `/api/captains/register`
+
+- Method and Path: `POST /api/captains/register` (mounted under `/api/captains`, full path: `/api/captains/register`)
+- Purpose: Register a new captain account.
+
+### Request Format
+
+- Headers:
+  - `Content-Type: application/json`
+- Body fields:
+  - `fullname.firstname` — string, required, minimum length 3
+  - `fullname.lastname` — string, optional, minimum length 3 if provided
+  - `email` — string, required, valid email format, must be unique
+  - `password` — string, required, minimum length 6
+  - `vehicle.color` — string, required, minimum length 3
+  - `vehicle.plate` — string, required, minimum length 3
+  - `vehicle.capacity` — number, required, minimum 1
+  - `vehicle.vehicleType` — string, required, one of: "car", "motorcycle", "auto"
+- Example JSON request:
+
+```json
+{
+  "fullname": {
+    "firstname": "John",
+    "lastname": "Doe"
+  },
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "vehicle": {
+    "color": "Red",
+    "plate": "ABC-1234",
+    "capacity": 4,
+    "vehicleType": "car"
+  }
+}
+```
+
+### Response Format
+
+- `201 Created` — Successful registration
+  - Body:
+    ```json
+    {
+      "captain": {
+        "fullname": {
+          "firstname": "John",
+          "lastname": "Doe"
+        },
+        "email": "john.doe@example.com",
+        "vehicle": {
+          "color": "Red",
+          "plate": "ABC-1234",
+          "capacity": 4,
+          "vehicleType": "car"
+        },
+        "_id": "665f0b1c2a3c4d5e6f7a8b9d"
+      },
+      "token": "JWT_TOKEN_STRING"
+    }
+    ```
+- `400 Bad Request` — Validation failure or captain already exists
+  - Body (Validation Errors):
+    ```json
+    {
+      "errors": [
+        {
+          "msg": "Invalid email",
+          "path": "email",
+          "location": "body"
+        }
+      ]
+    }
+    ```
+  - Body (Already Registered):
+    ```json
+    { "error": "Captain already registered" }
+    ```
+- `500 Internal Server Error` — Unexpected server error
+  - Body:
+    ```json
+    { "error": "Internal Server Error" }
+    ```
+
 ## Notes
+
 - Ensure `JWT_SECRET` is set before testing; otherwise token generation will fail.
 - To return `409 Conflict` on duplicate emails, add an error handler that maps MongoDB duplicate key errors (E11000) to `409`.
