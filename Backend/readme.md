@@ -325,6 +325,164 @@ Authorization: Bearer JWT_TOKEN_STRING
     { "error": "Internal Server Error" }
     ```
 
+## Captain Login API — `/api/captains/login`
+
+- Method and Path: `POST /api/captains/login` (mounted under `/api/captains`, full path: `/api/captains/login`)
+- Purpose: Authenticate an existing captain by verifying credentials and return a JWT.
+
+### Request Format
+
+- Content Type: `application/json`
+- Body fields:
+  - `email` — string, required, valid email format
+  - `password` — string, required, minimum length 6
+- Validation:
+  - `email` must be a valid email
+  - `password` must be at least 6 characters
+- Example JSON request:
+
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+```
+
+### Response Format
+
+- `200 OK` — Successful login
+  - Body:
+    ```json
+    {
+      "captain": {
+        "fullname": {
+          "firstname": "John",
+          "lastname": "Doe"
+        },
+        "email": "john.doe@example.com",
+        "vehicle": {
+          "color": "Red",
+          "plate": "ABC-1234",
+          "capacity": 4,
+          "vehicleType": "car"
+        },
+        "_id": "665f0b1c2a3c4d5e6f7a8b9d"
+      },
+      "token": "JWT_TOKEN_STRING"
+    }
+    ```
+- `400 Bad Request` — Invalid credentials or validation failure
+  - Body (Invalid Credentials):
+    ```json
+    { "error": "Invalid email or password" }
+    ```
+  - Body (Validation Errors):
+    ```json
+    {
+      "errors": [
+        {
+          "msg": "Invalid email",
+          "path": "email",
+          "location": "body"
+        }
+      ]
+    }
+    ```
+- `500 Internal Server Error` — Server failure
+  - Body:
+    ```json
+    { "error": "Internal Server Error" }
+    ```
+
+## Captain Profile API — `/api/captains/profile`
+
+- Method and Path: `GET /api/captains/profile` (mounted under `/api/captains`, full path: `/api/captains/profile`)
+- Purpose: Retrieve the authenticated captain's profile.
+- Authentication: Required. Provide JWT via `Cookie: token=...` or `Authorization: Bearer <token>`.
+
+### Request Format
+
+- Headers:
+  - `Authorization: Bearer <JWT>` or `Cookie: token=<JWT>`
+- Body: None
+- Example request:
+
+```http
+GET /api/captains/profile HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer JWT_TOKEN_STRING
+```
+
+### Response Format
+
+- `200 OK` — Successful retrieval
+  - Body:
+    ```json
+    {
+      "captain": {
+        "_id": "665f0b1c2a3c4d5e6f7a8b9d",
+        "fullname": {
+          "firstname": "John",
+          "lastname": "Doe"
+        },
+        "email": "john.doe@example.com",
+        "vehicle": {
+          "color": "Red",
+          "plate": "ABC-1234",
+          "capacity": 4,
+          "vehicleType": "car"
+        }
+      }
+    }
+    ```
+- `401 Unauthorized` — Missing/invalid/blacklisted token or captain not found
+  - Body:
+    ```json
+    { "message": "Unauthorized." }
+    ```
+- `500 Internal Server Error` — Unexpected server error
+  - Body:
+    ```json
+    { "error": "Internal Server Error" }
+    ```
+
+## Captain Logout API — `/api/captains/logout`
+
+- Method and Path: `GET /api/captains/logout` (mounted under `/api/captains`, full path: `/api/captains/logout`)
+- Purpose: Invalidate the current session token by blacklisting it and clear the cookie.
+- Authentication: Required. Provide JWT via `Cookie: token=...` or `Authorization: Bearer <token>`.
+
+### Request Format
+
+- Headers:
+  - `Authorization: Bearer <JWT>` or `Cookie: token=<JWT>`
+- Body: None
+- Example request:
+
+```http
+GET /api/captains/logout HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer JWT_TOKEN_STRING
+```
+
+### Response Format
+
+- `200 OK` — Successful logout
+  - Body:
+    ```json
+    { "message": "Logout successful" }
+    ```
+- `401 Unauthorized` — Missing token
+  - Body:
+    ```json
+    { "error": "Unauthorized." }
+    ```
+- `400 Bad Request` — Logout failed (e.g., token processing error)
+  - Body:
+    ```json
+    { "error": "Error message" }
+    ```
+
 ## Notes
 
 - Ensure `JWT_SECRET` is set before testing; otherwise token generation will fail.

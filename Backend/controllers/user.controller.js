@@ -98,6 +98,6 @@ module.exports.logoutUser = async (req, res, next) => {
       message: "Logged out successfully.",
     });
   } catch (error) {
-    next(error);
+    res.status(400).json({ error: error.message });
   }
 };
